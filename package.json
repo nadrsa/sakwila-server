@@ -1,0 +1,10 @@
+{
+  "name": "sakwila-bot",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "^4.19.0",
+    "axios": "^1.7.0",
+    "cors": "^2.8.5"
+  }
+}
