@@ -48,6 +48,8 @@ app.get('/webhook', (req, res) => {
 // ===== ② الويبهوك: استقبال الرسائل + منطق البوت =====
 app.post('/webhook', async (req, res) => {
   try {
+    const settings = loadSettings();
+if (!settings.botEnabled) return res.sendStatus(200);  // البوت متوقف = صمت
     const value = req.body?.entry?.[0]?.changes?.[0]?.value;
     const messages = value?.messages;
 
@@ -110,4 +112,28 @@ app.get('/api/inbox', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+// 🔍 عدسة التشخيص — يريك ما يراه الخادم فعلاً
+app.get('/api/debug', (req, res) => {
+  const t = process.env.WA_TOKEN || '';
+  res.json({
+    token_found: t.length > 0,
+    token_length: t.length,
+    first_6: t.substring(0, 6),
+    last_6: t.substring(t.length - 6),
+    phone_id: process.env.WA_PHONE_ID || 'NOT FOUND'
+  });
+  // ⚙️ إعدادات البوت (التشغيل/التوقف)
+const SETTINGS_FILE = './settings.json';
+function loadSettings() {
+  try { return JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf-8')); }
+  catch { return { botEnabled: true }; }
+}
+function saveSettings(s) { fs.writeFileSync(SETTINGS_FILE, JSON.stringify(s, null, 2)); }
+
+app.get('/api/settings', (req, res) => res.json(loadSettings()));
+
+app.post('/api/settings', (req, res) => {
+  saveSettings({ botEnabled: req.body.botEnabled });
+  res.json({ success: true });
+});
 app.listen(PORT, () => console.log(`🚀 البوت يعمل على المنفذ ${PORT}`));
