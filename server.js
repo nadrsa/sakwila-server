@@ -91,10 +91,15 @@ app.post('/webhook', async (req, res) => {
 
         if (rule) {
           await sendWhatsApp(from, rule.response);
+        }         if (rule) {
+          await sendWhatsApp(from, rule.response);
         } else {
           await sendWhatsApp(from,
             'شكراً على رسالتك 🙏\nاكتب سؤالك مباشرة،' +
             '\nأو جرّب التطبيق مجاناً: https://sakwila.app');
+          // 🆕 سجل الأسئلة التي لم يفهمها البوت
+          fs.appendFileSync('./needs_reply.txt',
+            `[${new Date().toLocaleString()}] ${name} (${from}): ${text}\n`);
         }
       }
     }
@@ -155,4 +160,12 @@ app.get('/api/debug', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+// 🆕 الأسئلة المتوقفة عن إجابة
+app.get('/api/needs-reply', (req, res) => {
+  try {
+    res.type('text/plain').send(fs.readFileSync('./needs_reply.txt', 'utf-8'));
+  } catch {
+    res.send('');
+  }
+});
 app.listen(PORT, () => console.log(`🚀 البوت يعمل على المنفذ ${PORT}`));
